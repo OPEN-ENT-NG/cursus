@@ -1,0 +1,20 @@
+{
+	"main" : "org.entcore.cursus.Cursus",
+	"port" : 8085,
+	"app-name" : "Cursus",
+	"app-address" : "/cursus",
+	"app-icon" : "Cursus-large",
+	"auto-redeploy": false,
+	"integration-mode" : "HTTP",
+	"app-registry.port" : 8012,
+	"entcore.port" : 8009,
+	"webserviceEndpoint": "",
+	"authConf": {
+		"numSite": "",
+		"authentification": {
+			"typeIndividu": "",
+			"idIndividu": "",
+			"pwd": ""
+		}
+	}
+}

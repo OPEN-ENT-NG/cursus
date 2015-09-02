@@ -1,0 +1,13 @@
+{
+	"cursus.title": "Cursus",
+	"cursus.inactive.text": "Veuillez entrer le numéro de votre carte Picardie Cursus pour afficher les informations de votre compte.",
+	"cursus.error.text": "Le numéro de carte ne correspond pas à votre carte Picardie Cursus.<br>Merci de saisir à nouveau votre numéro de carte.",
+	"cursus.cardNb": "Numéro de carte",
+	"cursus.wallet": "Porte-Monnaie",
+	"cursus.sale": "Solde",
+	"cursus.my.wallets": "Mes porte-monnaie",
+	"cursus.update.cardNb.title": "Gestion de ma carte",
+	"cursus.update.cardNb.text": "Cliquez sur le bouton ci-dessous pour changer le numéro de la carte dont vous souhaitez afficher les informations",
+	"cursus.update.cardNb.button": "Mettre à jour mon n° de carte",
+	"cursus.validate": "Valider"
+}

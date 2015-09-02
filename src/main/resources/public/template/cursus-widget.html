@@ -1,0 +1,55 @@
+<div class="widget cursus-widget">
+    <div class="header">
+        <img class="twelve" src="/cursus/public/img/logo.png" draggable="false">
+    </div>
+
+    <div class="content">
+
+        <div class="loading-panel" ng-if="widget.model.loads">
+            <h1 translate content="loading"></h1>
+        </div>
+
+        <div ng-if="!widget.model.loads">
+            <div ng-if="!widget.model.cardNb || widget.model.error">
+                <p ng-if="!widget.model.error"><i18n>cursus.inactive.text</i18n></p>
+                <p ng-if="widget.model.error" class="warning"><i18n>cursus.error.text</i18n></p>
+
+                <div>
+                    <div class="row input-label">
+                        <label class="six cell" translate content="cursus.cardNb"></label>
+                        <input class="six cell big-input" type="text" ng-model="inputCardNb">
+                    </div>
+                    <div class="centered-text vertical-spacing-twice">
+                        <button ng-click="widget.model.connect(inputCardNb)" ng-disabled="!inputCardNb" translate content="cursus.validate"></button>
+                    </div>
+                </div>
+            </div>
+
+            <div ng-if="widget.model.cardNb && !widget.model.error">
+                <div class="row">
+                    <h2 class=><i18n>cursus.my.wallets</i18n></h2>
+                    <table class="twelve centered-text">
+                        <thead>
+                            <th translate content="cursus.wallet"></th>
+                            <th translate content="cursus.sale"></th>
+                        </thead>
+                        <tbody ng-if="widget.model.sales">
+                            <tr ng-repeat="sale in widget.model.sales">
+                                <td>[[sale.wallet.libelle]]</td>
+                                <td>[[sale.solde]] €</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="row">
+                    <h2><i18n>cursus.update.cardNb.title</i18n></h2>
+                    <i18n>cursus.update.cardNb.text</i18n>.
+                    <div class="centered-text vertical-spacing-twice">
+                        <button ng-click="widget.model.logout()" translate content="cursus.update.cardNb.button"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
