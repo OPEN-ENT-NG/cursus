@@ -26,7 +26,7 @@ public class Cursus extends BaseServer {
 			endpointURL = new URL(endpoint);
 			addController(new CursusController(cursusClient, endpointURL, conf));
 		} catch (MalformedURLException e) {
-			e.printStackTrace();
+			log.error("[Cursus] Bad endpoint url.");
 		}
 	}
 

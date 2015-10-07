@@ -14,8 +14,6 @@ import org.vertx.java.core.http.HttpHeaders;
 import org.vertx.java.core.http.HttpServerRequest;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.logging.Logger;
-import org.vertx.java.core.logging.impl.LoggerFactory;
 
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
@@ -24,9 +22,6 @@ import fr.wseduc.webutils.Either;
 import fr.wseduc.webutils.http.BaseController;
 
 public class CursusController extends BaseController {
-
-
-	private final Logger log = LoggerFactory.getLogger(CursusController.class);
 
 	//Service
 	private final CursusService service = new CursusService();
