@@ -2,6 +2,7 @@ package org.entcore.cursus.controllers;
 
 import java.net.URL;
 import java.util.Calendar;
+import java.util.Date;
 
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.cursus.filters.CursusFilter;
@@ -148,16 +149,11 @@ public class CursusController extends BaseController {
 	private class CursusService{
 
 		public void authWrapper(final Handler<Boolean> handler){
-			Long expirationDate = 0L;
 			Long currentDate = Calendar.getInstance().getTimeInMillis();
-			try{
-				String expirationDateStr = authData.getString("dateExpiration");
-				expirationDate = Long.parseLong(expirationDateStr.substring(expirationDateStr.indexOf('(') + 1, expirationDateStr.indexOf('+')));
-			} catch(Exception e){
-				log.error("[Cursus][authWrapper] Bad expiration date parsing, forcing token refresh.");
-			}
+			Long expirationDate = authData.getLong("tokenInit", 0l) + authConf.getLong("tokenDelay", 1800000l);
 
 			if(expirationDate < currentDate){
+				log.info("[Cursus] Token seems to have expired.");
 				refreshToken(handler);
 			} else {
 				handler.handle(true);
@@ -169,6 +165,7 @@ public class CursusController extends BaseController {
 				public void handle(HttpClientResponse response) {
 					if(response.statusCode() >= 300){
 						handler.handle(false);
+						log.error(response.statusMessage());
 						return;
 					}
 
@@ -176,6 +173,7 @@ public class CursusController extends BaseController {
 						public void handle(Buffer body) {
 							log.info("[Cursus][refreshToken] Token refreshed.");
 							authData = new JsonObject(body.toString());
+							authData.putNumber("tokenInit", new Date().getTime());
 							handler.handle(true);
 						}
 					});
@@ -229,6 +227,7 @@ public class CursusController extends BaseController {
 						public void handle(HttpClientResponse response) {
 							if(response.statusCode() >= 300){
 								handler.handle(false);
+								log.error(response.statusMessage());
 								return;
 							}
 
