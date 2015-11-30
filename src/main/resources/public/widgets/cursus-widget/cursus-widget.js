@@ -1,6 +1,6 @@
 var cursusWidget;
 
-cursusWidget = model.widgets.findWidget("cursus");
+cursusWidget = model.widgets.findWidget("cursus-widget");
 
 cursusWidget.model = {
   loadingWrapper: function(http) {

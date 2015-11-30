@@ -1,4 +1,4 @@
-cursusWidget = model.widgets.findWidget "cursus"
+cursusWidget = model.widgets.findWidget "cursus-widget"
 
 cursusWidget.model =
 	loadingWrapper: (http) ->
