@@ -3,18 +3,26 @@ package org.entcore.cursus.controllers;
 import java.net.URL;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.cursus.filters.CursusFilter;
 import org.vertx.java.core.Handler;
+import org.vertx.java.core.Vertx;
 import org.vertx.java.core.buffer.Buffer;
 import org.vertx.java.core.http.HttpClient;
 import org.vertx.java.core.http.HttpClientRequest;
 import org.vertx.java.core.http.HttpClientResponse;
 import org.vertx.java.core.http.HttpHeaders;
 import org.vertx.java.core.http.HttpServerRequest;
+import org.vertx.java.core.http.RouteMatcher;
+import org.vertx.java.core.impl.VertxInternal;
 import org.vertx.java.core.json.JsonArray;
 import org.vertx.java.core.json.JsonObject;
+import org.vertx.java.core.shareddata.ConcurrentSharedMap;
+import org.vertx.java.core.spi.cluster.ClusterManager;
+import org.vertx.java.platform.Container;
 
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
@@ -35,26 +43,23 @@ public class CursusController extends BaseController {
 	private final JsonObject authConf;
 
 	//Auth reply data
-	private JsonObject authData = new JsonObject();
+	private Map<String, String> authMap;
 	//Wallets list
 	private JsonArray wallets = new JsonArray();
 
-	public CursusController(HttpClient webClient, URL endpoint, final JsonObject conf){
-		cursusClient = webClient;
-		cursusClient.setHost(endpoint.getHost());
+	@Override
+	public void init(Vertx vertx, final Container container, RouteMatcher rm,
+			Map<String, fr.wseduc.webutils.security.SecuredAction> securedActions) {
+		super.init(vertx, container, rm, securedActions);
 
-		if("https".equals(endpoint.getProtocol())){
-			cursusClient
-				.setSSL(true)
-				.setTrustAll(true)
-				.setPort(443);
+		ConcurrentSharedMap<Object, Object> server = vertx.sharedData().getMap("server");
+		Boolean cluster = (Boolean) server.get("cluster");
+		if (Boolean.TRUE.equals(cluster)) {
+			ClusterManager cm = ((VertxInternal) vertx).clusterManager();
+			authMap = cm.getSyncMap("cursusMap");
 		} else {
-			cursusClient
-				.setPort(endpoint.getPort() == -1 ? 80 : endpoint.getPort());
+			authMap = new HashMap<>();
 		}
-
-		wsEndpoint = endpoint;
-		authConf = conf;
 
 		/*
 		service.refreshToken(new Handler<Boolean>() {
@@ -74,6 +79,25 @@ public class CursusController extends BaseController {
 					log.info("[Cursus][refreshWallets] Wallets list refreshed.");
 			}
 		});
+
+	}
+
+	public CursusController(HttpClient webClient, URL endpoint, final JsonObject conf){
+		cursusClient = webClient;
+		cursusClient.setHost(endpoint.getHost());
+
+		if("https".equals(endpoint.getProtocol())){
+			cursusClient
+				.setSSL(true)
+				.setTrustAll(true)
+				.setPort(443);
+		} else {
+			cursusClient
+				.setPort(endpoint.getPort() == -1 ? 80 : endpoint.getPort());
+		}
+
+		wsEndpoint = endpoint;
+		authConf = conf;
 	}
 
 	@Put("/refreshToken")
@@ -149,8 +173,14 @@ public class CursusController extends BaseController {
 	private class CursusService{
 
 		public void authWrapper(final Handler<Boolean> handler){
+			JsonObject authObject = new JsonObject();
+			if(authMap.get("auth") != null)
+				authObject = new JsonObject(authMap.get("auth"));
+
 			Long currentDate = Calendar.getInstance().getTimeInMillis();
-			Long expirationDate = authData.getLong("tokenInit", 0l) + authConf.getLong("tokenDelay", 1800000l);
+			Long expirationDate = 0l;
+			if(authObject != null)
+				expirationDate = authObject.getLong("tokenInit", 0l) + authConf.getLong("tokenDelay", 1800000l);
 
 			if(expirationDate < currentDate){
 				log.info("[Cursus] Token seems to have expired.");
@@ -172,8 +202,10 @@ public class CursusController extends BaseController {
 					response.bodyHandler(new Handler<Buffer>() {
 						public void handle(Buffer body) {
 							log.info("[Cursus][refreshToken] Token refreshed.");
-							authData = new JsonObject(body.toString());
+
+							JsonObject authData = new JsonObject(body.toString());
 							authData.putNumber("tokenInit", new Date().getTime());
+							authMap.put("auth", authData.encode());
 							handler.handle(true);
 						}
 					});
@@ -200,7 +232,7 @@ public class CursusController extends BaseController {
 					JsonObject reqBody = new JsonObject();
 					reqBody
 						.putString("numSite", authConf.getString("numSite"))
-						.putString("tokenId", authData.getString("tokenId"))
+						.putString("tokenId", new JsonObject(authMap.get("auth")).getString("tokenId"))
 						.putArray("typeListes", new JsonArray()
 							.addObject(new JsonObject()
 								.putString("typeListe", "LST_PORTEMONNAIE")
@@ -261,7 +293,7 @@ public class CursusController extends BaseController {
 					JsonObject reqBody = new JsonObject();
 					reqBody
 						.putString("numSite", authConf.getString("numSite"))
-						.putString("tokenId", authData.getString("tokenId"))
+						.putString("tokenId", new JsonObject(authMap.get("auth")).getString("tokenId"))
 						.putObject("filtres", new JsonObject()
 							.putString("numeroCarte", cardNb));
 
@@ -297,7 +329,7 @@ public class CursusController extends BaseController {
 					JsonObject reqBody = new JsonObject();
 					reqBody
 						.putString("numeroSite", authConf.getString("numSite"))
-						.putString("tokenId", authData.getString("tokenId"))
+						.putString("tokenId", new JsonObject(authMap.get("auth")).getString("tokenId"))
 						.putObject("filtresSoldesBeneficiaire", new JsonObject()
 							.putString("numeroDossier", numeroDossier)
 							.putString("numeroCarte", cardNb));
