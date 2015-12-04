@@ -45,6 +45,15 @@ cursusWidget.model =
 				@error = true
 				model.widgets.apply()
 
+cursusWidget.formatSolde = (soldeStr) ->
+	if typeof soldeStr isnt "string" or soldeStr.length is 0
+		soldeStr
+	else if soldeStr.length is 1
+		"0,0#{soldeStr}"
+	else if soldeStr.length is 2
+		"0,#{soldeStr}"
+	else
+		"#{soldeStr.substring(0, soldeStr.length - 2)},#{soldeStr.substring(soldeStr.length - 2)}"
 
 ### INIT ###
 (() ->
