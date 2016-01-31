@@ -1,5 +1,5 @@
 {
-    "name": "org.entcore~cursus~0.1.2",
+    "name": "org.entcore~cursus~0.2.0",
     "config": {
         "main" : "org.entcore.cursus.Cursus",
         "port" : 8085,
