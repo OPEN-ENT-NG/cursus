@@ -1,12 +1,17 @@
 package org.entcore.cursus.controllers;
 
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.entcore.common.http.filter.ResourceFilter;
+import org.entcore.common.user.UserInfos;
+import org.entcore.common.user.UserUtils;
 import org.entcore.cursus.filters.CursusFilter;
 import org.vertx.java.core.Handler;
 import org.vertx.java.core.Vertx;
@@ -148,21 +153,44 @@ public class CursusController extends BaseController {
 				}
 
 				final String id = ((JsonObject) result.right().getValue().get(0)).getInteger("id").toString();
+				String birthDateEncoded = ((JsonObject) result.right().getValue().get(0)).getString("dateNaissance");
+				try {
+					birthDateEncoded = birthDateEncoded.replace("/Date(", "");
+					birthDateEncoded = birthDateEncoded.substring(0, birthDateEncoded.indexOf("+"));
+					final Date birthDate = new Date(Long.parseLong(birthDateEncoded));
 
-				service.getSales(id, cardNb, new Handler<Either<String,JsonArray>>() {
-					public void handle(Either<String, JsonArray> result) {
-						if(result.isLeft()){
-							badRequest(request);
-							return;
+					UserUtils.getUserInfos(eb, request, new Handler<UserInfos>() {
+						public void handle(UserInfos infos) {
+							DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+							try {
+								Date sessionBirthDate = format.parse(infos.getBirthDate());
+								if(sessionBirthDate.compareTo(birthDate) == 0){
+									service.getSales(id, cardNb, new Handler<Either<String,JsonArray>>() {
+										public void handle(Either<String, JsonArray> result) {
+											if(result.isLeft()){
+												badRequest(request);
+												return;
+											}
+
+											JsonObject finalResult = new JsonObject()
+												.putArray("wallets", new JsonArray(cursusMap.get("wallets")))
+												.putArray("sales", result.right().getValue());
+
+											renderJson(request, finalResult);
+										}
+									});
+								} else {
+									badRequest(request);
+								}
+							} catch (ParseException e) {
+								badRequest(request);
+								return;
+							}
 						}
-
-						JsonObject finalResult = new JsonObject()
-							.putArray("wallets", new JsonArray(cursusMap.get("wallets")))
-							.putArray("sales", result.right().getValue());
-
-						renderJson(request, finalResult);
-					}
-				});
+					});
+				} catch(Exception e){
+					badRequest(request);
+				}
 			}
 		});
 	}
