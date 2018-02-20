@@ -25,28 +25,21 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 
+import io.vertx.core.http.*;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
+import org.entcore.common.utils.MapFactory;
 import org.entcore.cursus.filters.CursusFilter;
-import org.vertx.java.core.Handler;
-import org.vertx.java.core.Vertx;
-import org.vertx.java.core.buffer.Buffer;
-import org.vertx.java.core.http.HttpClient;
-import org.vertx.java.core.http.HttpClientRequest;
-import org.vertx.java.core.http.HttpClientResponse;
-import org.vertx.java.core.http.HttpHeaders;
-import org.vertx.java.core.http.HttpServerRequest;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
 import org.vertx.java.core.http.RouteMatcher;
-import org.vertx.java.core.impl.VertxInternal;
-import org.vertx.java.core.json.JsonArray;
-import org.vertx.java.core.json.JsonObject;
-import org.vertx.java.core.shareddata.ConcurrentSharedMap;
-import org.vertx.java.core.spi.cluster.ClusterManager;
-import org.vertx.java.platform.Container;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+
 
 import fr.wseduc.rs.*;
 import fr.wseduc.security.ActionType;
@@ -70,18 +63,11 @@ public class CursusController extends BaseController {
 	private Map<String, String> cursusMap;
 
 	@Override
-	public void init(Vertx vertx, final Container container, RouteMatcher rm,
+	public void init(Vertx vertx, JsonObject config, RouteMatcher rm,
 			Map<String, fr.wseduc.webutils.security.SecuredAction> securedActions) {
-		super.init(vertx, container, rm, securedActions);
+		super.init(vertx, config, rm, securedActions);
 
-		ConcurrentSharedMap<Object, Object> server = vertx.sharedData().getMap("server");
-		Boolean cluster = (Boolean) server.get("cluster");
-		if (Boolean.TRUE.equals(cluster)) {
-			ClusterManager cm = ((VertxInternal) vertx).clusterManager();
-			cursusMap = cm.getSyncMap("cursusMap");
-		} else {
-			cursusMap = new HashMap<>();
-		}
+		cursusMap = MapFactory.getSyncClusterMap("cursusMap", vertx, false);
 
 		/*
 		service.refreshToken(new Handler<Boolean>() {
@@ -106,22 +92,23 @@ public class CursusController extends BaseController {
 
 	}
 
-	public CursusController(HttpClient webClient, URL endpoint, final JsonObject conf){
-		cursusClient = webClient;
-		cursusClient.setHost(endpoint.getHost());
+	public CursusController(URL endpoint, final JsonObject conf){
+		HttpClientOptions cursusClientOptions = new HttpClientOptions()
+				.setDefaultHost(endpoint.getHost());
 
 		if("https".equals(endpoint.getProtocol())){
-			cursusClient
-				.setSSL(true)
+			cursusClientOptions
+				.setSsl(true)
 				.setTrustAll(true)
-				.setPort(443);
+				.setDefaultPort(443);
 		} else {
-			cursusClient
-				.setPort(endpoint.getPort() == -1 ? 80 : endpoint.getPort());
+			cursusClientOptions
+				.setDefaultPort(endpoint.getPort() == -1 ? 80 : endpoint.getPort());
 		}
 
 		wsEndpoint = endpoint;
 		authConf = conf;
+		cursusClient = vertx.createHttpClient(cursusClientOptions);
 	}
 
 	@Put("/refreshToken")
@@ -171,8 +158,8 @@ public class CursusController extends BaseController {
 					return;
 				}
 
-				final String id = ((JsonObject) result.right().getValue().get(0)).getInteger("id").toString();
-				String birthDateEncoded = ((JsonObject) result.right().getValue().get(0)).getString("dateNaissance");
+				final String id = result.right().getValue().getJsonObject(0).getInteger("id").toString();
+				String birthDateEncoded = result.right().getValue().getJsonObject(0).getString("dateNaissance");
 				try {
 					birthDateEncoded = birthDateEncoded.replace("/Date(", "");
 					birthDateEncoded = birthDateEncoded.substring(0, birthDateEncoded.indexOf("+"));
@@ -192,8 +179,8 @@ public class CursusController extends BaseController {
 											}
 
 											JsonObject finalResult = new JsonObject()
-												.putArray("wallets", new JsonArray(cursusMap.get("wallets")))
-												.putArray("sales", result.right().getValue());
+												.put("wallets", new JsonArray(cursusMap.get("wallets")))
+												.put("sales", result.right().getValue());
 
 											renderJson(request, finalResult);
 										}
@@ -251,7 +238,7 @@ public class CursusController extends BaseController {
 							log.info("[Cursus][refreshToken] Token refreshed.");
 
 							JsonObject authData = new JsonObject(body.toString());
-							authData.putNumber("tokenInit", new Date().getTime());
+							authData.put("tokenInit", new Date().getTime());
 							cursusMap.put("auth", authData.encode());
 							handler.handle(true);
 						}
@@ -278,12 +265,12 @@ public class CursusController extends BaseController {
 					/* JSON */
 					JsonObject reqBody = new JsonObject();
 					reqBody
-						.putString("numSite", authConf.getString("numSite"))
-						.putString("tokenId", new JsonObject(cursusMap.get("auth")).getString("tokenId"))
-						.putArray("typeListes", new JsonArray()
-							.addObject(new JsonObject()
-								.putString("typeListe", "LST_PORTEMONNAIE")
-								.putString("param1", schoolYear + "-" + (schoolYear + 1))
+						.put("numSite", authConf.getString("numSite"))
+						.put("tokenId", new JsonObject(cursusMap.get("auth")).getString("tokenId"))
+						.put("typeListes", new JsonArray()
+							.add(new JsonObject()
+								.put("typeListe", "LST_PORTEMONNAIE")
+								.put("param1", schoolYear + "-" + (schoolYear + 1))
 							)
 						);
 					/*      */
@@ -313,7 +300,8 @@ public class CursusController extends BaseController {
 							response.bodyHandler(new Handler<Buffer>() {
 								public void handle(Buffer body) {
 									try{
-										cursusMap.put("wallets", ((JsonObject) new JsonArray(body.toString()).get(0)).getArray("parametres").encode());
+										cursusMap.put("wallets", new JsonArray(body.toString()).getJsonObject(0)
+												.getJsonArray("parametres").encode());
 										handler.handle(true);
 									} catch(Exception e){
 										handler.handle(false);
@@ -339,10 +327,10 @@ public class CursusController extends BaseController {
 
 					JsonObject reqBody = new JsonObject();
 					reqBody
-						.putString("numSite", authConf.getString("numSite"))
-						.putString("tokenId", new JsonObject(cursusMap.get("auth")).getString("tokenId"))
-						.putObject("filtres", new JsonObject()
-							.putString("numeroCarte", cardNb));
+						.put("numSite", authConf.getString("numSite"))
+						.put("tokenId", new JsonObject(cursusMap.get("auth")).getString("tokenId"))
+						.put("filtres", new JsonObject()
+							.put("numeroCarte", cardNb));
 
 					HttpClientRequest req = cursusClient.post(wsEndpoint.getPath() + "/BeneficiaireImpl.svc/json/GetListeBeneficiaire", new Handler<HttpClientResponse>() {
 						public void handle(HttpClientResponse response) {
@@ -375,11 +363,11 @@ public class CursusController extends BaseController {
 
 					JsonObject reqBody = new JsonObject();
 					reqBody
-						.putString("numeroSite", authConf.getString("numSite"))
-						.putString("tokenId", new JsonObject(cursusMap.get("auth")).getString("tokenId"))
-						.putObject("filtresSoldesBeneficiaire", new JsonObject()
-							.putString("numeroDossier", numeroDossier)
-							.putString("numeroCarte", cardNb));
+						.put("numeroSite", authConf.getString("numSite"))
+						.put("tokenId", new JsonObject(cursusMap.get("auth")).getString("tokenId"))
+						.put("filtresSoldesBeneficiaire", new JsonObject()
+							.put("numeroDossier", numeroDossier)
+							.put("numeroCarte", cardNb));
 
 					HttpClientRequest req = cursusClient.post(wsEndpoint.getPath() + "/BeneficiaireImpl.svc/json/GetSoldesBeneficiaire", new Handler<HttpClientResponse>() {
 						public void handle(HttpClientResponse response) {
