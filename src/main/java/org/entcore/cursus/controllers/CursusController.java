@@ -53,7 +53,7 @@ public class CursusController extends BaseController {
 	private final CursusService service = new CursusService();
 
 	//Webservice client & endpoint
-	private final HttpClient cursusClient;
+	private HttpClient cursusClient;
 	private final URL wsEndpoint;
 
 	//Webservice auth request conf
@@ -66,6 +66,20 @@ public class CursusController extends BaseController {
 	public void init(Vertx vertx, JsonObject config, RouteMatcher rm,
 			Map<String, fr.wseduc.webutils.security.SecuredAction> securedActions) {
 		super.init(vertx, config, rm, securedActions);
+
+		HttpClientOptions cursusClientOptions = new HttpClientOptions()
+				.setDefaultHost(wsEndpoint.getHost());
+
+		if("https".equals(wsEndpoint.getProtocol())){
+			cursusClientOptions
+					.setSsl(true)
+					.setTrustAll(true)
+					.setDefaultPort(443);
+		} else {
+			cursusClientOptions
+					.setDefaultPort(wsEndpoint.getPort() == -1 ? 80 : wsEndpoint.getPort());
+		}
+		cursusClient = vertx.createHttpClient(cursusClientOptions);
 
 		cursusMap = MapFactory.getSyncClusterMap("cursusMap", vertx, false);
 
@@ -93,22 +107,8 @@ public class CursusController extends BaseController {
 	}
 
 	public CursusController(URL endpoint, final JsonObject conf){
-		HttpClientOptions cursusClientOptions = new HttpClientOptions()
-				.setDefaultHost(endpoint.getHost());
-
-		if("https".equals(endpoint.getProtocol())){
-			cursusClientOptions
-				.setSsl(true)
-				.setTrustAll(true)
-				.setDefaultPort(443);
-		} else {
-			cursusClientOptions
-				.setDefaultPort(endpoint.getPort() == -1 ? 80 : endpoint.getPort());
-		}
-
 		wsEndpoint = endpoint;
 		authConf = conf;
-		cursusClient = vertx.createHttpClient(cursusClientOptions);
 	}
 
 	@Put("/refreshToken")
