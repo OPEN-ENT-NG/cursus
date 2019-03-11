@@ -6,6 +6,7 @@
         "app-name" : "Cursus",
         "app-address" : "/cursus",
         "app-icon" : "Cursus-large",
+        "app-type" : "WIDGET",
         "host": "${host}",
         "ssl" : $ssl,
         "auto-redeploy": false,
