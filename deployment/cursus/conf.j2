@@ -1,0 +1,22 @@
+{
+    "name": "{{ cursusVersion }}",
+    "config": {
+        "main" : "org.entcore.cursus.Cursus",
+        "port" : 8085,
+        "app-name" : "Cursus",
+        "app-address" : "/cursus",
+        "app-icon" : "Cursus-large",
+        "app-type" : "WIDGET",
+        "host": "https://{{ host }}",
+        {% if overrideTheme %} "override-theme": {{ override2d }}, {% endif %}
+        "ssl" : true,
+        "auto-redeploy": false,
+        "userbook-host": "https://{{ host }}",
+        "integration-mode" : "HTTP",
+        "app-registry.port" : 8012,
+        "mode" : "prod",
+        "entcore.port" : 8009,
+        "webserviceEndpoint": "{{ cursusEndPoint }}",
+        "authConf": {{ cursusAuthConf }}
+    }
+}
