@@ -4,7 +4,7 @@
 
 * Développeur(s) : OPEN DIGITAL EDUCATION
 
-* Financeur(s) : Région Région Hauts-de-France (ex Picardie)
+* Financeur(s) : Région Hauts-de-France (ex Picardie)
 
 * Description : La carte Génération #HDF (ex Picardie Cursus) est une carte de paiement multi-services qui embarque les subventions de la région Nord Pas de Calais Picardie. Elle peut être utilisée comme moyen de paiement chez les partenaires de la région Nord Pas de Calais Picardie. Le widget Génération # HDF (ex Picardie Cursus) est disponible dans l’ENT LEO pour permettre aux élèves d’accéder facilement et rapidement aux informations de leur carte Génération #HDF (ex Picardie Cursus). Le service technique de paiement et de subvention est fourni par [Moneo / Applicam](http://www.moneo.com/moneo-applicam/solutions/gestion-des-aides-et-des-subventions)
 
