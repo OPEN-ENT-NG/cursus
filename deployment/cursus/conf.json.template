@@ -1,5 +1,5 @@
 {
-    "name": "org.entcore~cursus~1.6-SNAPSHOT",
+    "name": "org.entcore~cursus~2.0-b2school-SNAPSHOT",
     "config": {
         "main" : "org.entcore.cursus.Cursus",
         "port" : 8085,

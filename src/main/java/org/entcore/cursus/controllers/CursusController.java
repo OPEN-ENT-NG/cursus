@@ -28,6 +28,7 @@ import java.util.Date;
 import java.util.Map;
 
 import io.vertx.core.http.*;
+import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import org.entcore.common.http.filter.ResourceFilter;
 import org.entcore.common.user.UserInfos;
 import org.entcore.common.user.UserUtils;
@@ -225,29 +226,31 @@ public class CursusController extends BaseController {
 		}
 
 		public void refreshToken(final Handler<Boolean> handler){
-			HttpClientRequest req = cursusClient.post(wsEndpoint.getPath() + "/AuthentificationImpl.svc/json/AuthentificationExtranet", new Handler<HttpClientResponse>() {
-				public void handle(HttpClientResponse response) {
-					if(response.statusCode() >= 300){
-						handler.handle(false);
-						log.error(response.statusMessage());
-						return;
-					}
-
-					response.bodyHandler(new Handler<Buffer>() {
-						public void handle(Buffer body) {
-							log.info("[Cursus][refreshToken] Token refreshed.");
-
-							JsonObject authData = new JsonObject(body.toString());
-							authData.put("tokenInit", new Date().getTime());
-							cursusMap.put("auth", authData.encode());
-							handler.handle(true);
+			cursusClient.request(new RequestOptions()
+					.setMethod(HttpMethod.POST)
+					.setURI(wsEndpoint.getPath() + "/AuthentificationImpl.svc/json/AuthentificationExtranet")
+					.setHeaders(new HeadersMultiMap()
+							.add(HttpHeaders.ACCEPT, "application/json; charset=UTF-8")
+							.add(HttpHeaders.CONTENT_TYPE, "application/json")))
+					.flatMap(request -> request.send(authConf.encode()))
+					.onSuccess(response -> {
+						if(response.statusCode() >= 300){
+							handler.handle(false);
+							log.error(response.statusMessage());
+							return;
 						}
+
+						response.bodyHandler(new Handler<Buffer>() {
+							public void handle(Buffer body) {
+								log.info("[Cursus][refreshToken] Token refreshed.");
+
+								JsonObject authData = new JsonObject(body.toString());
+								authData.put("tokenInit", new Date().getTime());
+								cursusMap.put("auth", authData.encode());
+								handler.handle(true);
+							}
+						});
 					});
-				}
-			});
-			req.putHeader(HttpHeaders.ACCEPT, "application/json; charset=UTF-8")
-			   .putHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-			req.end(authConf.encode());
 		}
 
 		public void refreshWallets(final Handler<Boolean> handler){
@@ -289,30 +292,32 @@ public class CursusController extends BaseController {
 						"</tem:GetListes>";
 					/*      */
 
-					HttpClientRequest req = cursusClient.post(wsEndpoint.getPath() + "/GeneralImpl.svc/json/GetListes", new Handler<HttpClientResponse>() {
-						public void handle(HttpClientResponse response) {
-							if(response.statusCode() >= 300){
-								handler.handle(false);
-								log.error(response.statusMessage());
-								return;
-							}
-
-							response.bodyHandler(new Handler<Buffer>() {
-								public void handle(Buffer body) {
-									try{
-										cursusMap.put("wallets", new JsonArray(body.toString()).getJsonObject(0)
-												.getJsonArray("parametres").encode());
-										handler.handle(true);
-									} catch(Exception e){
-										handler.handle(false);
-									}
+					cursusClient.request(new RequestOptions()
+							.setMethod(HttpMethod.POST)
+							.setURI(wsEndpoint.getPath() + "/GeneralImpl.svc/json/GetListes")
+							.setHeaders(new HeadersMultiMap()
+									.add(HttpHeaders.ACCEPT, "application/json; charset=UTF-8")
+									.add(HttpHeaders.CONTENT_TYPE, "application/json")))
+							.flatMap(request -> request.send(reqBody.encode()))
+							.onSuccess(response -> {
+								if(response.statusCode() >= 300){
+									handler.handle(false);
+									log.error(response.statusMessage());
+									return;
 								}
+
+								response.bodyHandler(new Handler<Buffer>() {
+									public void handle(Buffer body) {
+										try{
+											cursusMap.put("wallets", new JsonArray(body.toString()).getJsonObject(0)
+													.getJsonArray("parametres").encode());
+											handler.handle(true);
+										} catch(Exception e){
+											handler.handle(false);
+										}
+									}
+								});
 							});
-						}
-					});
-					req.putHeader(HttpHeaders.ACCEPT, "application/json; charset=UTF-8")
-					   .putHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-					req.end(reqBody.encode());
 				}
 			});
 		};
@@ -332,23 +337,25 @@ public class CursusController extends BaseController {
 						.put("filtres", new JsonObject()
 							.put("numeroCarte", cardNb));
 
-					HttpClientRequest req = cursusClient.post(wsEndpoint.getPath() + "/BeneficiaireImpl.svc/json/GetListeBeneficiaire", new Handler<HttpClientResponse>() {
-						public void handle(HttpClientResponse response) {
-							if(response.statusCode() >= 300){
-								handler.handle(new Either.Left<String, JsonArray>("invalid.status.code"));
-								return;
-							}
-
-							response.bodyHandler(new Handler<Buffer>() {
-								public void handle(Buffer body) {
-									handler.handle(new Either.Right<String, JsonArray>(new JsonArray(body.toString())));
+					cursusClient.request(new RequestOptions()
+							.setMethod(HttpMethod.POST)
+							.setURI(wsEndpoint.getPath() + "/BeneficiaireImpl.svc/json/GetListeBeneficiaire")
+							.setHeaders(new HeadersMultiMap()
+									.add(HttpHeaders.ACCEPT, "application/json; charset=UTF-8")
+									.add(HttpHeaders.CONTENT_TYPE, "application/json")))
+							.flatMap(request -> request.send(reqBody.encode()))
+							.onSuccess(response -> {
+								if(response.statusCode() >= 300){
+									handler.handle(new Either.Left<String, JsonArray>("invalid.status.code"));
+									return;
 								}
+
+								response.bodyHandler(new Handler<Buffer>() {
+									public void handle(Buffer body) {
+										handler.handle(new Either.Right<String, JsonArray>(new JsonArray(body.toString())));
+									}
+								});
 							});
-						}
-					});
-					req.putHeader(HttpHeaders.ACCEPT, "application/json; charset=UTF-8")
-					   .putHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-					req.end(reqBody.encode());
 				}
 			});
 		}
@@ -369,23 +376,25 @@ public class CursusController extends BaseController {
 							.put("numeroDossier", numeroDossier)
 							.put("numeroCarte", cardNb));
 
-					HttpClientRequest req = cursusClient.post(wsEndpoint.getPath() + "/BeneficiaireImpl.svc/json/GetSoldesBeneficiaire", new Handler<HttpClientResponse>() {
-						public void handle(HttpClientResponse response) {
-							if(response.statusCode() >= 300){
-								handler.handle(new Either.Left<String, JsonArray>("invalid.status.code"));
-								return;
-							}
-
-							response.bodyHandler(new Handler<Buffer>() {
-								public void handle(Buffer body) {
-									handler.handle(new Either.Right<String, JsonArray>(new JsonArray(body.toString())));
+					cursusClient.request(new RequestOptions()
+							.setMethod(HttpMethod.POST)
+							.setURI(wsEndpoint.getPath() + "/BeneficiaireImpl.svc/json/GetSoldesBeneficiaire")
+							.setHeaders(new HeadersMultiMap()
+									.add(HttpHeaders.ACCEPT, "application/json; charset=UTF-8")
+									.add(HttpHeaders.CONTENT_TYPE, "application/json")))
+							.flatMap(request -> request.send(reqBody.encode()))
+							.onSuccess(response -> {
+								if(response.statusCode() >= 300){
+									handler.handle(new Either.Left<String, JsonArray>("invalid.status.code"));
+									return;
 								}
+
+								response.bodyHandler(new Handler<Buffer>() {
+									public void handle(Buffer body) {
+										handler.handle(new Either.Right<String, JsonArray>(new JsonArray(body.toString())));
+									}
+								});
 							});
-						}
-					});
-					req.putHeader(HttpHeaders.ACCEPT, "application/json; charset=UTF-8")
-					   .putHeader(HttpHeaders.CONTENT_TYPE, "application/json");
-					req.end(reqBody.encode());
 				}
 			});
 		}

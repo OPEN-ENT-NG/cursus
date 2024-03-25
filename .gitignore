@@ -6,3 +6,6 @@
 /.gradle
 /.settings
 .jshintrc
+.env
+target
+dependency-reduced-pom.xml
