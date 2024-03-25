@@ -22,6 +22,7 @@ package org.entcore.cursus;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import io.vertx.core.Promise;
 import org.entcore.common.http.BaseServer;
 import org.entcore.cursus.controllers.CursusController;
 import io.vertx.core.http.HttpClient;
@@ -32,8 +33,8 @@ public class Cursus extends BaseServer {
 
 
 	@Override
-	public void start() throws Exception {
-		super.start();
+	public void start(Promise<Void> startPromise) throws Exception {
+		super.start(startPromise);
 
 		final String endpoint = config.getString("webserviceEndpoint", "");
 		final JsonObject conf = config.getJsonObject("authConf", new JsonObject());
@@ -45,6 +46,7 @@ public class Cursus extends BaseServer {
 		} catch (MalformedURLException e) {
 			log.error("[Cursus] Bad endpoint url.");
 		}
+		startPromise.tryComplete();
 	}
 
 }
