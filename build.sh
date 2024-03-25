@@ -2,11 +2,6 @@
 
 MVN_OPTS="-Duser.home=/var/maven"
 
-if [ ! -e node_modules ]
-then
-  mkdir node_modules
-fi
-
 if [ -z ${USER_UID:+x} ]
 then
   export USER_UID=1000
@@ -30,10 +25,6 @@ test () {
   docker compose run --rm maven mvn $MVN_OPTS test
 }
 
-buildNode () {
-  docker compose run --rm -u "$USER_UID:$GROUP_GID" node sh -c "npm install && node_modules/gulp/bin/gulp.js build"
-}
-
 publish() {
   version=`docker compose run --rm maven mvn $MVN_OPTS help:evaluate -Dexpression=project.version -q -DforceStdout`
   level=`echo $version | cut -d'-' -f3`
@@ -54,11 +45,8 @@ do
     clean)
       clean
       ;;
-    buildNode)
-      buildNode
-      ;;
     install)
-      buildNode && install
+      install
       ;;
     test)
       test
