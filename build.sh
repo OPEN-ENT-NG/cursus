@@ -58,7 +58,7 @@ do
       buildNode
       ;;
     install)
-      buildGradle && install
+      buildNode && install
       ;;
     test)
       test
