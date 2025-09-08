@@ -22,10 +22,10 @@ package org.entcore.cursus;
 import java.net.MalformedURLException;
 import java.net.URL;
 
+import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import org.entcore.common.http.BaseServer;
 import org.entcore.cursus.controllers.CursusController;
-import io.vertx.core.http.HttpClient;
 import io.vertx.core.json.JsonObject;
 
 public class Cursus extends BaseServer {
@@ -34,19 +34,31 @@ public class Cursus extends BaseServer {
 
 	@Override
 	public void start(Promise<Void> startPromise) throws Exception {
-		super.start(startPromise);
+        final Promise<Void> promise = Promise.promise();
+        super.start(promise);
+        promise.future()
+            .compose(e -> this.init())
+            .onComplete(startPromise);
+    }
 
-		final String endpoint = config.getString("webserviceEndpoint", "");
-		final JsonObject conf = config.getJsonObject("authConf", new JsonObject());
+    private Future<Void> init() {
+        Future<Void> future;
+        try {
+            final String endpoint = config.getString("webserviceEndpoint", "");
+            final JsonObject conf = config.getJsonObject("authConf", new JsonObject());
 
-		URL endpointURL;
-		try {
-			endpointURL = new URL(endpoint);
-			addController(new CursusController(endpointURL, conf));
-		} catch (MalformedURLException e) {
-			log.error("[Cursus] Bad endpoint url.");
-		}
-		startPromise.tryComplete();
+            URL endpointURL;
+            try {
+                endpointURL = new URL(endpoint);
+                addController(new CursusController(endpointURL, conf));
+            } catch (MalformedURLException e) {
+                log.error("[Cursus] Bad endpoint url.");
+            }
+            future = Future.succeededFuture();
+        } catch(Exception e) {
+            future = Future.failedFuture(e);
+        }
+        return future;
 	}
 
 }
