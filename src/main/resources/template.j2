@@ -2,6 +2,10 @@
   "name": "org.entcore~cursus",
   "config": {
     "main" : "org.entcore.cursus.Cursus",
+    "probes": [
+      "org.entcore.common.http.health.Neo4jProbe",
+      "org.entcore.common.http.health.MongoProbe"
+    ],
     "port" : 8085,
     "app-name" : "Cursus",
     "app-address" : "/cursus",
