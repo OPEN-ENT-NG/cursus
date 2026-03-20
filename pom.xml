@@ -3,60 +3,84 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>io.edifice</groupId>
-        <artifactId>app-parent</artifactId>
-        <version>1.2.0</version>
-    </parent>
-
-    <groupId>org.entcore</groupId>
-    <artifactId>cursus</artifactId>
-    <version>2.1-SNAPSHOT</version>
-
-    <scm>
-        <connection>scm:git:https://github.com/OPEN-ENT-NG/cursus.git</connection>
-        <developerConnection>scm:git:https://github.com/OPEN-ENT-NG/cursus.git</developerConnection>
-        <url>https://github.com/OPEN-ENT-NG/cursus</url>
-    </scm>
-
-    <properties>
-        <entcore.version>6.13-SNAPSHOT</entcore.version>
-    </properties>
-
-    <repositories>
-        <repository>
-            <id>ode</id>
-            <name>ODE Repository</name>
-            <url>https://maven.opendigitaleducation.com/nexus/content/groups/public</url>
-        </repository>
-    </repositories>
-
-    <dependencies>
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-core</artifactId>
-            <version>${vertxVersion}</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.entcore</groupId>
-            <artifactId>common</artifactId>
-            <version>${entcore.version}</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.entcore</groupId>
-            <artifactId>tests</artifactId>
-            <version>${entcore.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.gatling.highcharts</groupId>
-            <artifactId>gatling-charts-highcharts</artifactId>
-            <version>${gatlingHighchartsVersion}</version>
-            <scope>test</scope>
-        </dependency>
-
-    </dependencies>
+  <parent>
+    <groupId>io.edifice</groupId>
+    <artifactId>app-parent</artifactId>
+    <version>1.2.1</version>
+  </parent>
+  <groupId>org.entcore</groupId>
+  <artifactId>cursus</artifactId>
+  <version>2.1-separation-SNAPSHOT</version>
+  <scm>
+    <connection>scm:git:https://github.com/OPEN-ENT-NG/cursus.git</connection>
+    <developerConnection>scm:git:https://github.com/OPEN-ENT-NG/cursus.git</developerConnection>
+    <url>https://github.com/OPEN-ENT-NG/cursus</url>
+  </scm>
+  <properties>
+    <entcore.version>6.13-SNAPSHOT</entcore.version>
+    <modMongoVersion>4.1-separation-SNAPSHOT</modMongoVersion>
+    <modJsonSchemaValidatorVersion>2.1-SNAPSHOT</modJsonSchemaValidatorVersion>
+    <entCoreLibsVersion>6.14-separation-SNAPSHOT</entCoreLibsVersion>
+    <entCoreVersion>6.14-separation-SNAPSHOT</entCoreVersion>
+  </properties>
+  <repositories>
+    <repository>
+      <id>ode</id>
+      <name>ODE Repository</name>
+      <url>https://maven.opendigitaleducation.com/nexus/content/groups/public</url>
+    </repository>
+  </repositories>
+  <dependencies>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-core</artifactId>
+      <version>${vertxVersion}</version>
+      <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.entcore</groupId>
+      <artifactId>common</artifactId>
+      <version>${entcore.version}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.entcore</groupId>
+      <artifactId>tests</artifactId>
+      <version>${entcore.version}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.gatling.highcharts</groupId>
+      <artifactId>gatling-charts-highcharts</artifactId>
+      <version>${gatlingHighchartsVersion}</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.entcore</groupId>
+      <artifactId>common</artifactId>
+      <version>${entCoreLibsVersion}</version>
+      <scope>compile</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>mod-mongo-persistor</artifactId>
+      <version>${modMongoVersion}</version>
+      <scope>runtime</scope>
+      <classifier>fat</classifier>
+    </dependency>
+    <dependency>
+      <groupId>org.entcore</groupId>
+      <artifactId>session</artifactId>
+      <version>${entCoreLibsVersion}</version>
+      <scope>runtime</scope>
+      <classifier>fat</classifier>
+    </dependency>
+    <dependency>
+      <groupId>com.opendigitaleducation</groupId>
+      <artifactId>mod-json-schema-validator</artifactId>
+      <version>${modJsonSchemaValidatorVersion}</version>
+      <scope>runtime</scope>
+      <classifier>fat</classifier>
+    </dependency>
+  </dependencies>
 </project>
-
