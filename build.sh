@@ -28,7 +28,7 @@ publish() {
     *)         export nexusRepository='releases' ;;
   esac
 
-  docker compose run --rm  maven mvn -DrepositoryId=ode-$nexusRepository -DskipTests --settings /var/maven/.m2/settings.xml deploy
+  docker compose run --rm  maven mvn $MVN_OPTS -DrepositoryId=ode-$nexusRepository -DskipTests --settings /var/maven/.m2/settings.xml deploy
 }
 
 # If DEBUG env var is set to "true" then set -x to enable debug mode
