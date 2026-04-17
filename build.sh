@@ -13,7 +13,7 @@ clean () {
 }
 
 install () {
-  docker compose run --rm maven mvn $MVN_OPTS install -DskipTests
+  docker compose run --rm maven mvn $MVN_OPTS install -DskipTests -U
 }
 
 test () {
