@@ -13,6 +13,7 @@
     "app-type" : "WIDGET",
     "host": "https://{{ host }}",
     "ssl" : true,
+    {% if overrideTheme %} "override-theme": {{ override2d }}, {% endif %}
     "auto-redeploy": false,
     "userbook-host": "https://{{ host }}",
     "integration-mode": "{{ integration_mode|default('HTTP') }}",
