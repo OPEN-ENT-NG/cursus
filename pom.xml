@@ -20,8 +20,8 @@
     </scm>
 
     <properties>
-        <entcore.version>6.15-SNAPSHOT</entcore.version>
-        <entCoreLibsVersion>6.15-SNAPSHOT</entCoreLibsVersion>
+        <entcore.version>6.16-develop-enabling-SNAPSHOT</entcore.version>
+        <entCoreLibsVersion>6.16-SNAPSHOT</entCoreLibsVersion>
     </properties>
 
     <repositories>
